@@ -3,29 +3,31 @@ const asyncHandler = require("express-async-handler");
 import Song from "./song_model";
 
 // add new song
-export const addSong = asyncHandler(async (req: Request, res: Response) => {
-  const { title, artist, album, genre } = req.body;
-  if (!title || !artist || !album || !genre) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
-  try {
-    const exists = await Song.findOne({
-      title,
-      "artist.fname": artist.fname,
-      "artist.lname": artist.lname,
-    });
-    if (exists) {
-      return res.status(400).json({ message: "Song already exists" });
+export const addSong = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { title, artist, album, genre } = req.body;
+    if (!title || !artist || !album || !genre) {
+      return res.status(400).json({ message: "All fields are required" });
     }
-    const song = new Song({ title, artist, album, genre });
-    const songSaved = song.save();
-    if (songSaved) {
-      res.status(201).send(songSaved);
+    try {
+      const exists = await Song.findOne({
+        title,
+        "artist.fname": artist.fname,
+        "artist.lname": artist.lname,
+      });
+      if (exists) {
+        return res.status(400).json({ message: "Song already exists" });
+      }
+      const song = new Song({ title, artist, album, genre });
+      const songSaved = await song.save();
+      if (songSaved) {
+        res.status(201).json(songSaved);
+      }
+    } catch (error) {
+      next(error);
     }
-  } catch (error) {
-    return res.status(500).json({ message: `${error}` });
   }
-});
+);
 
 // get all single song
 export const getSongs = asyncHandler(

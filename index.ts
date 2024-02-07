@@ -1,7 +1,7 @@
 import express, { json, urlencoded, Request, Response } from "express";
 import cors from "cors";
 import connectDB from "./src/config/db";
-import songRoutes from "./src/song_routes"
+import { albumRoutes, artistRoutes, genreRoutes, songRoutes } from "./src/routes/routes";
 
 const app = express();
 
@@ -13,6 +13,9 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Songs API root");
 });
 app.use('/songs', songRoutes);
+app.use('/albums', albumRoutes);
+app.use('/artists', artistRoutes);
+app.use('/genres', genreRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

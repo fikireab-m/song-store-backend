@@ -1,8 +1,8 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-interface SongInterface extends Document {
+export interface SongInterface extends Document {
   title: string;
-  artist: { fname: string; lname: string; avatarUrl?: string };
+  artist: { name: string; avatarUrl?: string };
   album: { name: string; albumArt?: string };
   genre: string;
 }
@@ -14,13 +14,9 @@ const songSchema = new Schema(
       required: [true, "Title is required"],
     },
     artist: {
-      fname: {
+      name: {
         type: String,
         required: [true, "First name is required"],
-      },
-      lname: {
-        type: String,
-        required: [true, "Last name is required"],
       },
       avatarUrl: {
         type: String,

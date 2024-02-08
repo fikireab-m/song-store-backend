@@ -2,6 +2,7 @@ import express, { json, urlencoded, Request, Response } from "express";
 import cors from "cors";
 import connectDB from "./src/config/db";
 import { albumRoutes, artistRoutes, genreRoutes, songRoutes } from "./src/routes/routes";
+import path from 'path';
 
 const app = express();
 
@@ -10,7 +11,7 @@ app.use(json());
 app.use(urlencoded({ extended: true }));
 
 app.get("/", (req: Request, res: Response) => {
-  res.send("Songs API root");
+  res.status(200).sendFile(path.join(__dirname,"/index.html"));
 });
 app.use('/songs', songRoutes);
 app.use('/albums', albumRoutes);

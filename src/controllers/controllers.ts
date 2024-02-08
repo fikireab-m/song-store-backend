@@ -2,23 +2,26 @@ import { Request, Response, NextFunction } from "express";
 const asyncHandler = require("express-async-handler");
 import Song, { SongInterface } from "../model/song_model";
 
-
-// for filtering parameters
-// 
+/**
+ * for filtering parameters
+ */
 interface QueryParm {
   [key: string]: string
 }
 
-
-// add new song
-// 
+/**
+ * Add a new song
+ */
 export const addSong = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+
     const { title, artist, album, genre }: SongInterface = req.body;
+
     if (!title || !artist || !album || !genre) {
       res.status(400).json({ message: "All fields are required" });
       return;
     }
+
     try {
       const exists = await Song.findOne({
         title,
@@ -41,7 +44,6 @@ export const addSong = asyncHandler(
   }
 );
 
-
 /**
  * get all songs +++ filtering using query params 
  * like title, artist, album, and genre. 
@@ -59,6 +61,9 @@ export const getSongs = asyncHandler(
 
       const { title, album, artist, genre } = req.query;
 
+      /**
+       * if any of the filtering parameters aren't applied send all songs
+       */
       if (!title && !album && !artist && !genre) {
         songs = await Song.find();
         res.status(200).json(songs);
@@ -91,14 +96,13 @@ export const getSongs = asyncHandler(
   }
 );
 
-
 /**
- * get a single song using song's id
+ * get a single song using its id
  */
 export const getSong = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const id = req.params.id;
     try {
+      const id = req.params.id;
       const song = await Song.findById(id);
       res.status(200).send(song);
     } catch (err) {
@@ -107,9 +111,47 @@ export const getSong = asyncHandler(
   }
 );
 
+/**
+ * Update a song using its id
+ */
+export const updateSong = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const id = req.params.id;
+      const song: Partial<SongInterface> = req.body;
+      const updatedSong = await Song.findByIdAndUpdate(id, song, { new: true });
+      if (!updatedSong) {
+        res.status(404).json({ message: "Song not found" });
+        return;
+      }
+      res.status(201).json({ message: "Song updated successfully" });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
 /**
- * get all albums
+ * Delete a song using its id
+ */
+export const deleteSong = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const id = req.params.id;
+      const deletedSong = await Song.findByIdAndDelete(id);
+      if (!deletedSong) {
+        res.status(404).json({ message: "Song not found" });
+        return;
+      }
+      res.status(200).json({ message: "Song deleted successfully" });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+/**
+ * Get all distinct albums
  */
 export const getAlbums = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -124,7 +166,7 @@ export const getAlbums = asyncHandler(
 
 
 /**
- * get all artists
+ * Get all artists
  */
 export const getArtists = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -139,7 +181,7 @@ export const getArtists = asyncHandler(
 
 
 /**
- * get all genres
+ * Get all genres
  */
 export const getGenres = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -157,7 +199,7 @@ export const getGenres = asyncHandler(
 
 
 /**
- * get songs and albums count of a specific artist by using
+ * Get songs and albums count of a specific artist by using
  * aggregated query
  */
 export const getSongsAndAlbumsCountByArtist = asyncHandler(

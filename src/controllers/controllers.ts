@@ -157,7 +157,7 @@ export const getAlbums = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const albums = await Song.distinct('album', { 'album.name': { $exists: true } });
-      res.status(200).json({ albums, count: albums.length });
+      res.status(200).json(albums);
       return
     } catch (err) {
       next(err)
@@ -172,7 +172,7 @@ export const getArtists = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const artists = await Song.distinct('artist', { 'artist.name': { $exists: true } });
-      res.json({ artists, count: artists.length });
+      res.status(200).json(artists);
       return;
     } catch (err) {
       next(err)
@@ -187,10 +187,7 @@ export const getGenres = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const genres = await Song.distinct('genre');
-      res.json({
-        genres,
-        count: genres.length
-      });
+      res.status(200).json(genres);
       return;
     } catch (err) {
       next(err)

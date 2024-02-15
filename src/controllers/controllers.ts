@@ -97,21 +97,6 @@ export const getSongs = asyncHandler(
 );
 
 /**
- * get a single song using its id
- */
-export const getSong = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const id = req.params.id;
-      const song = await Song.findById(id);
-      res.status(200).send(song);
-    } catch (err) {
-      next(err);
-    }
-  }
-);
-
-/**
  * Update a song using its id
  */
 export const updateSong = asyncHandler(
@@ -191,39 +176,5 @@ export const getGenres = asyncHandler(
       return;
     } catch (err) {
       next(err)
-    }
-  });
-
-
-/**
- * Get songs and albums count of a specific artist by using
- * aggregated query
- */
-export const getSongsAndAlbumsCountByArtist = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const artist = req.params.artistName;
-      const songsAndAlbumsByArtist = await Song.aggregate([
-        {
-          $match: { 'artist.name': artist }
-        },
-        {
-          $group: {
-            _id: '$artist',
-            songsCount: { $sum: 1 },
-            albumsCount: { $addToSet: '$album.name' },
-          },
-        },
-        {
-          $project: {
-            _id: 1,
-            songsCount: 1,
-            albumsCount: { $size: '$albumsCount' },
-          },
-        },
-      ]);
-      res.status(200).json(songsAndAlbumsByArtist);
-    } catch (err) {
-      next(err);
     }
   });

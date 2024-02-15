@@ -5,9 +5,7 @@ import {
     getAlbums,
     getArtists,
     getGenres,
-    getSong,
     getSongs,
-    getSongsAndAlbumsCountByArtist,
     updateSong
 } from "../controllers/controllers";
 
@@ -18,7 +16,6 @@ const genreRoutes = express.Router();
 
 songRoutes
     .get("/", getSongs)
-    .get("/:id", getSong)
     .post("/add", addSong)
     .put("/:id", updateSong)
     .delete("/:id", deleteSong);
@@ -27,7 +24,6 @@ albumRoutes.get("/", getAlbums);
 
 artistRoutes
     .get("/", getArtists)
-    .get("/:artistName", getSongsAndAlbumsCountByArtist);
 
 genreRoutes.get("/", getGenres);
 

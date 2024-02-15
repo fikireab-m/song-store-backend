@@ -8,4 +8,4 @@ RUN npm install
 COPY ./src ./dist
 EXPOSE 5000
 
-CMD ["concurrently", "tsc -w", "nodemon dist/index.js"]
+CMD ["npm","start"]

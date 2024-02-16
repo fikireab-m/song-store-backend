@@ -97,7 +97,11 @@ exports.deleteSong = asyncHandler(async (req, res, next) => {
 });
 exports.getAlbums = asyncHandler(async (req, res, next) => {
     try {
-        const albums = await song_model_1.default.distinct('album', { 'album.name': { $exists: true } });
+        const albums = await song_model_1.default.aggregate([
+            { $match: { 'album.name': { $exists: true, $ne: "" } } },
+            { $group: { _id: '$album.name' } },
+            { $project: { name: '$_id' } }
+        ]);
         res.status(200).json(albums);
         return;
     }
@@ -107,7 +111,11 @@ exports.getAlbums = asyncHandler(async (req, res, next) => {
 });
 exports.getArtists = asyncHandler(async (req, res, next) => {
     try {
-        const artists = await song_model_1.default.distinct('artist', { 'artist.name': { $exists: true } });
+        const artists = await song_model_1.default.aggregate([
+            { $match: { 'artist.name': { $exists: true, $ne: "" } } },
+            { $group: { _id: '$artist.name' } },
+            { $project: { name: '$_id' } }
+        ]);
         res.status(200).json(artists);
         return;
     }

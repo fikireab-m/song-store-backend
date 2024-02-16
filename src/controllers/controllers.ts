@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 const asyncHandler = require("express-async-handler");
-import Song, { SongInterface } from "../model/song_model";
+import Song, { Album, SongInterface } from "../model/song_model";
 
 /**
  * for filtering parameters
@@ -141,7 +141,11 @@ export const deleteSong = asyncHandler(
 export const getAlbums = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const albums = await Song.distinct('album', { 'album.name': { $exists: true } });
+      const albums = await Song.aggregate([
+        { $match: { 'album.name': { $exists: true, $ne: "" } } },
+        { $group: { _id: '$album.name' } },
+        { $project: { name: '$_id' } }
+      ]);
       res.status(200).json(albums);
       return
     } catch (err) {
@@ -156,7 +160,11 @@ export const getAlbums = asyncHandler(
 export const getArtists = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const artists = await Song.distinct('artist', { 'artist.name': { $exists: true } });
+      const artists = await Song.aggregate([
+        { $match: { 'artist.name': { $exists: true, $ne: "" } } },
+        { $group: { _id: '$artist.name' } },
+        { $project: { name: '$_id' } }
+      ]);
       res.status(200).json(artists);
       return;
     } catch (err) {

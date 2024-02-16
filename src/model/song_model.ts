@@ -1,9 +1,11 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+export interface Artist{ name: string; avatarUrl?: string };
+export interface Album { name: string; albumArt?: string };
 export interface SongInterface extends Document {
   title: string;
-  artist: { name: string; avatarUrl?: string };
-  album: { name: string; albumArt?: string };
+  artist: Artist;
+  album: Album;
   genre: string;
 }
 

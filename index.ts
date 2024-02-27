@@ -3,6 +3,7 @@ import cors from "cors";
 import connectDB from "./src/config/db";
 import { albumRoutes, artistRoutes, genreRoutes, songRoutes } from "./src/routes/routes";
 import path from 'path';
+import { errorHandler, notFound } from "./src/middlewares/errorMiddleware";
 
 const app = express();
 
@@ -17,6 +18,9 @@ app.use('/songs', songRoutes);
 app.use('/albums', albumRoutes);
 app.use('/artists', artistRoutes);
 app.use('/genres', genreRoutes);
+
+app.use(notFound);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

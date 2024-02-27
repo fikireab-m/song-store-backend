@@ -33,8 +33,8 @@ const connectDB = async () => {
     const uri = process.env.DB_CONN_STRING;
     const dbName = process.env.DB_NAME;
     try {
-        await mongoose_1.default.connect(uri, { dbName: dbName }).then(() => {
-            console.log("MongoDB connection successful.");
+        await mongoose_1.default.connect(uri, { dbName: dbName }).then((con) => {
+            console.log(`MongoDB connected - ${con.connection.host}`);
         });
     }
     catch (err) {

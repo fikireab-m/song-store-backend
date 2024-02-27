@@ -31,6 +31,7 @@ const cors_1 = __importDefault(require("cors"));
 const db_1 = __importDefault(require("./src/config/db"));
 const routes_1 = require("./src/routes/routes");
 const path_1 = __importDefault(require("path"));
+const errorMiddleware_1 = require("./src/middlewares/errorMiddleware");
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use((0, express_1.json)());
@@ -42,6 +43,8 @@ app.use('/songs', routes_1.songRoutes);
 app.use('/albums', routes_1.albumRoutes);
 app.use('/artists', routes_1.artistRoutes);
 app.use('/genres', routes_1.genreRoutes);
+app.use(errorMiddleware_1.notFound);
+app.use(errorMiddleware_1.errorHandler);
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     (0, db_1.default)();

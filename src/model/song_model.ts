@@ -18,7 +18,7 @@ const songSchema = new Schema(
     artist: {
       name: {
         type: String,
-        required: [true, "First name is required"],
+        required: [true, "Artist name is required"],
       },
       avatarUrl: {
         type: String,

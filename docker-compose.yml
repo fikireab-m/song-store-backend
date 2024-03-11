@@ -1,0 +1,25 @@
+version: "3.8"
+services:
+  app:
+    container_name: song-store-api
+    image: song-store-img
+    # restart: always
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+  db:
+    container_name: store-mongodb
+    image: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    command: mongod --quiet --logpath /dev/null 
+
+volumes:
+  mongodb_data:

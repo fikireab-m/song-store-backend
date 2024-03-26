@@ -3,10 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchSongs = exports.getSongs = exports.addSong = void 0;
+exports.getGenres = exports.getAlbums = exports.getArtists = exports.searchSongs = exports.getSongs = exports.addSong = void 0;
 const asyncHandler = require("express-async-handler");
 const song_model_1 = __importDefault(require("../model/song_model"));
 const mongoose_1 = __importDefault(require("mongoose"));
+const artist_model_1 = __importDefault(require("../model/artist.model"));
+const album_model_1 = __importDefault(require("../model/album_model"));
+const genre_model_1 = __importDefault(require("../model/genre_model"));
 exports.addSong = asyncHandler(async (req, res, next) => {
     const { title, artistId, albumId, genreId } = req.body;
     if (!title || !artistId || !albumId || !genreId) {
@@ -140,7 +143,10 @@ exports.searchSongs = asyncHandler(async (req, res, next) => {
             {
                 $match: {
                     ...(artist && {
-                        'artist.fname': artist
+                        $or: [
+                            { 'artist.fname': artist },
+                            { 'artist.fname': artist }
+                        ]
                     })
                 }
             },
@@ -160,6 +166,48 @@ exports.searchSongs = asyncHandler(async (req, res, next) => {
             },
         ]);
         res.status(200).send(songs);
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.getArtists = asyncHandler(async (req, res, next) => {
+    try {
+        const artists = await artist_model_1.default.find();
+        if (artists) {
+            res.status(200).send(artists);
+        }
+        else {
+            res.status(404).json({ message: "No artist found" });
+        }
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.getAlbums = asyncHandler(async (req, res, next) => {
+    try {
+        const albums = await album_model_1.default.find();
+        if (albums) {
+            res.status(200).send(albums);
+        }
+        else {
+            res.status(404).json({ message: "No Album found" });
+        }
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.getGenres = asyncHandler(async (req, res, next) => {
+    try {
+        const genres = await genre_model_1.default.find();
+        if (genres) {
+            res.status(200).send(genres);
+        }
+        else {
+            res.status(404).json({ message: "No genres found" });
+        }
     }
     catch (error) {
         next(error);

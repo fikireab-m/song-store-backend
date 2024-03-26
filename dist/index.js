@@ -38,7 +38,7 @@ app.use((0, express_1.json)());
 app.get("/", (req, res) => {
     res.status(200).sendFile(path_1.default.join(__dirname, "/index.html"));
 });
-app.use('/api/songs', new_routes_1.default);
+app.use('/api', new_routes_1.default);
 app.use(errorMiddleware_1.notFound);
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

@@ -3,6 +3,8 @@ const asyncHandler = require("express-async-handler");
 import Song, { SongInterface } from "../model/song_model";
 import mongoose, { ObjectId } from "mongoose";
 import Artist from "../model/artist.model";
+import Album from "../model/album_model";
+import Genre from "../model/genre_model";
 
 /**
  * for filtering parameters
@@ -110,6 +112,9 @@ export const getSongs = asyncHandler(
 
 /**
  * Search songs
+ * either by title,
+ * artist name, 
+ * album, or genre
  */
 export const searchSongs = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -162,7 +167,10 @@ export const searchSongs = asyncHandler(
         {
           $match: {
             ...(artist && {
-              'artist.fname': artist
+              $or: [
+                { 'artist.fname': artist },
+                { 'artist.fname': artist }
+              ]
             })
           }
         },
@@ -187,48 +195,56 @@ export const searchSongs = asyncHandler(
     }
   });
 
-// export const getSongs = asyncHandler(
-//   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-//     try {
-//       let songs: SongInterface[];
+/**
+ * Get all Artists
+ */
+export const getArtists = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const artists = await Artist.find();
+      if (artists) {
+        res.status(200).send(artists);
+      } else {
+        res.status(404).json({ message: "No artist found" });
+      }
+    } catch (error) {
+      next(error)
+    }
+  });
 
-//       const { title, album, artist, genre } = req.query;
+/**
+ * Get all Albums
+ */
+export const getAlbums = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const albums = await Album.find();
+      if (albums) {
+        res.status(200).send(albums);
+      } else {
+        res.status(404).json({ message: "No Album found" })
+      }
+    } catch (error) {
+      next(error)
+    }
+  });
 
-//       /**
-//        * if any of the filtering parameters aren't applied send all songs
-//        */
-//       if (!title && !album && !artist && !genre) {
-//         songs = await Song.find();
-//         res.status(200).json(songs);
-//         return;
-//       }
-
-//       let queryParams: QueryParm = {};
-
-//       if (title) {
-//         queryParams['title'] = title.toString();
-//       }
-//       if (album) {
-//         queryParams['album.name'] = album.toString();
-//       }
-//       if (artist) {
-//         queryParams['artist.name'] = artist.toString();
-//       }
-//       if (genre) {
-//         queryParams['genre'] = genre.toString();
-//       }
-//       songs = await Song.find(queryParams);
-//       if (!songs.length) {
-//         res.status(404).json({ message: 'No songs found' });
-//         return;
-//       }
-//       res.status(200).json({ songs, count: songs.length });
-//     } catch (error) {
-//       next(error);
-//     }
-//   }
-// );
-
+/**
+ * Get all genres
+ */
+export const getGenres = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const genres = await Genre.find();
+      if (genres) {
+        res.status(200).send(genres);
+      } else {
+        res.status(404).json({ message: "No genres found" })
+      }
+    } catch (error) {
+      next(error)
+    }
+  });
 // /**
 //  * Update a song using its id
 //  */

@@ -21,7 +21,7 @@ app.get("/", (req: Request, res: Response) => {
 // app.use('/genres', genreRoutes);
 
 
-app.use('/api/songs', newRoutes);
+app.use('/api', newRoutes);
 
 app.use(notFound);
 

@@ -1,9 +1,15 @@
 import { Router } from "express";
-import { addSong, getSongs, searchSongs } from "../controllers/controllers";
+import { addSong, getAlbums, getArtists, getGenres, getSongs, searchSongs } from "../controllers/controllers";
 
 const router = Router();
-router.route("/")
+router.route("/songs")
     .post(addSong)
-    .get(searchSongs);
+    .get(getSongs);
+router.get("/songs/search", searchSongs);
+
+router.get("/albums", getAlbums);
+router.get("/artists", getArtists);
+router.get("/genres", getGenres);
+
 
 export default router;

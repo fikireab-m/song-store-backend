@@ -3,28 +3,34 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getGenres = exports.getArtists = exports.getAlbums = exports.deleteSong = exports.updateSong = exports.getSongs = exports.addSong = void 0;
+exports.searchSongs = exports.getSongs = exports.addSong = void 0;
 const asyncHandler = require("express-async-handler");
 const song_model_1 = __importDefault(require("../model/song_model"));
+const mongoose_1 = __importDefault(require("mongoose"));
 exports.addSong = asyncHandler(async (req, res, next) => {
-    const { title, artist, album, genre } = req.body;
-    if (!title || !artist || !album || !genre) {
+    const { title, artistId, albumId, genreId } = req.body;
+    if (!title || !artistId || !albumId || !genreId) {
         res.status(400).json({ message: "All fields are required" });
         return;
     }
     try {
         const exists = await song_model_1.default.findOne({
             title,
-            "artist.name": artist.name,
+            "artist": artistId,
         });
         if (exists) {
             res.status(400).json({ message: "Song already exists" });
             return;
         }
-        const song = new song_model_1.default({ title, artist, album, genre });
+        const song = new song_model_1.default({
+            title,
+            artistId: new mongoose_1.default.Types.ObjectId(artistId.toString()),
+            albumId: new mongoose_1.default.Types.ObjectId(albumId.toString()),
+            genreId: new mongoose_1.default.Types.ObjectId(genreId.toString())
+        });
         const songSaved = await song.save();
         if (songSaved) {
-            res.status(201).json(songSaved);
+            res.status(201).send(songSaved);
             return;
         }
     }
@@ -35,101 +41,127 @@ exports.addSong = asyncHandler(async (req, res, next) => {
 });
 exports.getSongs = asyncHandler(async (req, res, next) => {
     try {
-        let songs;
-        const { title, album, artist, genre } = req.query;
-        if (!title && !album && !artist && !genre) {
-            songs = await song_model_1.default.find();
-            res.status(200).json(songs);
-            return;
+        const songs = await song_model_1.default.aggregate([
+            {
+                $lookup: {
+                    from: "albums",
+                    localField: "albumId",
+                    foreignField: "_id",
+                    as: "album"
+                }
+            },
+            {
+                $lookup: {
+                    from: "genres",
+                    localField: "genreId",
+                    foreignField: "_id",
+                    as: "genre"
+                }
+            },
+            {
+                $lookup: {
+                    from: "artists",
+                    localField: "artistId",
+                    foreignField: "_id",
+                    as: "artist"
+                }
+            },
+            {
+                $unwind: { path: '$artist' }
+            },
+            {
+                $unwind: { path: '$album' }
+            },
+            {
+                $unwind: { path: '$genre' }
+            },
+            {
+                $project: { albumId: 0, artistId: 0, genreId: 0 }
+            }
+        ]);
+        if (songs) {
+            res.status(200).send(songs);
         }
-        let queryParams = {};
-        if (title) {
-            queryParams['title'] = title.toString();
+        else {
+            res.status(404).json({ message: "No songs found" });
         }
-        if (album) {
-            queryParams['album.name'] = album.toString();
-        }
-        if (artist) {
-            queryParams['artist.name'] = artist.toString();
-        }
-        if (genre) {
-            queryParams['genre'] = genre.toString();
-        }
-        songs = await song_model_1.default.find(queryParams);
-        if (!songs.length) {
-            res.status(404).json({ message: 'No songs found' });
-            return;
-        }
-        res.status(200).json({ songs, count: songs.length });
     }
     catch (error) {
         next(error);
     }
 });
-exports.updateSong = asyncHandler(async (req, res, next) => {
+exports.searchSongs = asyncHandler(async (req, res, next) => {
+    const { genre, album, artist, title } = req.query;
     try {
-        const id = req.params.id;
-        const song = req.body;
-        const updatedSong = await song_model_1.default.findByIdAndUpdate(id, song, { new: true });
-        if (!updatedSong) {
-            res.status(404).json({ message: "Song not found" });
-            return;
-        }
-        res.status(201).json({ message: "Song updated successfully" });
-    }
-    catch (err) {
-        next(err);
-    }
-});
-exports.deleteSong = asyncHandler(async (req, res, next) => {
-    try {
-        const id = req.params.id;
-        const deletedSong = await song_model_1.default.findByIdAndDelete(id);
-        if (!deletedSong) {
-            res.status(404).json({ message: "Song not found" });
-            return;
-        }
-        res.status(200).json({ message: "Song deleted successfully" });
-    }
-    catch (err) {
-        next(err);
-    }
-});
-exports.getAlbums = asyncHandler(async (req, res, next) => {
-    try {
-        const albums = await song_model_1.default.aggregate([
-            { $match: { 'album.name': { $exists: true, $ne: "" } } },
-            { $group: { _id: '$album.name' } },
-            { $project: { name: '$_id' } }
+        const songs = await song_model_1.default.aggregate([
+            {
+                $lookup: {
+                    from: "albums",
+                    localField: "albumId",
+                    foreignField: "_id",
+                    as: "album"
+                }
+            },
+            {
+                $lookup: {
+                    from: "genres",
+                    localField: "genreId",
+                    foreignField: "_id",
+                    as: "genre"
+                }
+            },
+            {
+                $lookup: {
+                    from: "artists",
+                    localField: "artistId",
+                    foreignField: "_id",
+                    as: "artist"
+                }
+            },
+            {
+                $unwind: { path: '$artist' }
+            },
+            {
+                $unwind: { path: '$album' }
+            },
+            {
+                $unwind: { path: '$genre' }
+            },
+            {
+                $project: { albumId: 0, artistId: 0, genreId: 0 }
+            },
+            {
+                $match: {
+                    ...(title && {
+                        title: title
+                    })
+                }
+            },
+            {
+                $match: {
+                    ...(artist && {
+                        'artist.fname': artist
+                    })
+                }
+            },
+            {
+                $match: {
+                    ...(album && {
+                        'album.name': album
+                    })
+                }
+            },
+            {
+                $match: {
+                    ...(genre && {
+                        'genre.name': genre
+                    })
+                }
+            },
         ]);
-        res.status(200).json(albums);
-        return;
+        res.status(200).send(songs);
     }
-    catch (err) {
-        next(err);
-    }
-});
-exports.getArtists = asyncHandler(async (req, res, next) => {
-    try {
-        const artists = await song_model_1.default.aggregate([
-            { $match: { 'artist.name': { $exists: true, $ne: "" } } },
-            { $group: { _id: '$artist.name' } },
-            { $project: { name: '$_id' } }
-        ]);
-        res.status(200).json(artists);
-        return;
-    }
-    catch (err) {
-        next(err);
-    }
-});
-exports.getGenres = asyncHandler(async (req, res, next) => {
-    try {
-        const genres = await song_model_1.default.distinct('genre');
-        res.status(200).json(genres);
-        return;
-    }
-    catch (err) {
-        next(err);
+    catch (error) {
+        next(error);
     }
 });

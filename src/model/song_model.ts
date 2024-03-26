@@ -1,43 +1,29 @@
-import mongoose, { Schema, Document } from "mongoose";
+import { Schema, model } from "mongoose";
 
-export interface Artist{ name: string; avatarUrl?: string };
-export interface Album { name: string; albumArt?: string };
-export interface SongInterface extends Document {
+export interface SongInterface {
   title: string;
-  artist: Artist;
-  album: Album;
-  genre: string;
+  artistId: Schema.Types.ObjectId;
+  albumId: Schema.Types.ObjectId;
+  genreId: Schema.Types.ObjectId;
 }
 
 const songSchema = new Schema(
   {
     title: {
       type: String,
-      required: [true, "Title is required"],
+      required: true
     },
-    artist: {
-      name: {
-        type: String,
-        required: [true, "Artist name is required"],
-      },
-      avatarUrl: {
-        type: String,
-        default: "https://icon-library.com/images/generic-person-icon/generic-person-icon-1.jpg",
-      },
+    artistId: {
+      type: Schema.Types.ObjectId,
+      required: true
     },
-    album: {
-      name: {
-        type: String,
-        required: [true, "Album name is required"],
-      },
-      albumArt: {
-        type: String,
-        default: "https://images.unsplash.com/photo-1614680376573-df3480f0c6ff?q=80&w=1674&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      },
+    albumId: {
+      type: Schema.Types.ObjectId,
+      required: true
     },
-    genre: {
-      type: String,
-      required: [true, "Genere is required"],
+    genreId: {
+      type: Schema.Types.ObjectId,
+      required: true
     },
   },
   {
@@ -45,5 +31,5 @@ const songSchema = new Schema(
   }
 );
 
-const Song = mongoose.model<SongInterface>("Song", songSchema);
+const Song = model<SongInterface>("Song", songSchema);
 export default Song;

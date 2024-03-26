@@ -9,7 +9,7 @@
       "forceConsistentCasingInFileNames": true,
       "outDir": "./dist",
     },
-    "include": ["src/**/*.ts", "./index.ts"],
+    "include": ["src/**/*.ts", "./index.ts", "src/controllers/controllers.ts"],
     "exclude": ["node_modules", "dist"]
   }
  

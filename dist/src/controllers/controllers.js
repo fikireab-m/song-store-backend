@@ -94,7 +94,7 @@ exports.getSongs = asyncHandler(async (req, res, next) => {
     }
 });
 exports.searchSongs = asyncHandler(async (req, res, next) => {
-    const { genre, album, artist, title } = req.query;
+    const { key, title, album, artist, genre } = req.query;
     try {
         const songs = await song_model_1.default.aggregate([
             {
@@ -131,39 +131,42 @@ exports.searchSongs = asyncHandler(async (req, res, next) => {
                 $unwind: { path: '$genre' }
             },
             {
-                $project: { albumId: 0, artistId: 0, genreId: 0 }
-            },
-            {
-                $match: {
-                    ...(title && {
-                        title: title
-                    })
+                $addFields: {
+                    "artist.name": { $concat: ["$artist.fname", " ", "$artist.lname"] }
                 }
             },
             {
                 $match: {
-                    ...(artist && {
+                    ...(key && {
                         $or: [
-                            { 'artist.fname': artist },
-                            { 'artist.fname': artist }
+                            { title: key },
+                            { 'artist.fname': key },
+                            { 'artist.fname': key },
+                            { 'artist.name': key },
+                            { 'genre.name': key },
+                            { 'album.name': key },
                         ]
                     })
                 }
             },
             {
                 $match: {
-                    ...(album && {
-                        'album.name': album
-                    })
+                    ...(title && { title: title })
                 }
             },
             {
                 $match: {
-                    ...(genre && {
-                        'genre.name': genre
-                    })
+                    ...(album && { 'genre.name': album })
                 }
             },
+            {
+                $match: {
+                    ...(artist && { 'artist.name': artist })
+                }
+            },
+            {
+                $project: { albumId: 0, artistId: 0, genreId: 0, 'artist.name': 0 }
+            }
         ]);
         res.status(200).send(songs);
     }

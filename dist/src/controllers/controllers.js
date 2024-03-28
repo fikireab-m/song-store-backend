@@ -94,7 +94,12 @@ exports.getSongs = asyncHandler(async (req, res, next) => {
     }
 });
 exports.searchSongs = asyncHandler(async (req, res, next) => {
-    const { key, title, album, artist, genre } = req.query;
+    const { key, title, album, artist, genres } = req.query;
+    let genreList = [];
+    if (genres !== undefined) {
+        const strGenres = JSON.stringify(genres);
+        genreList = [...JSON.parse(strGenres)];
+    }
     try {
         const songs = await song_model_1.default.aggregate([
             {
@@ -156,12 +161,17 @@ exports.searchSongs = asyncHandler(async (req, res, next) => {
             },
             {
                 $match: {
-                    ...(album && { 'genre.name': album })
+                    ...(album && { 'album.name': album })
                 }
             },
             {
                 $match: {
                     ...(artist && { 'artist.name': artist })
+                }
+            },
+            {
+                $match: {
+                    ...(genreList.length > 0 && { 'genre.name': { $in: genreList } })
                 }
             },
             {

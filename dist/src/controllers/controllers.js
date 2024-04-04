@@ -43,142 +43,171 @@ exports.addSong = asyncHandler(async (req, res, next) => {
     }
 });
 exports.getSongs = asyncHandler(async (req, res, next) => {
+    const { pageSize, pageLimit } = req.query;
     try {
+        const page = parseInt(`${pageSize}`, 10) || 1;
+        const limit = parseInt(`${pageLimit}`, 10) || 10;
         const songs = await song_model_1.default.aggregate([
             {
-                $lookup: {
-                    from: "albums",
-                    localField: "albumId",
-                    foreignField: "_id",
-                    as: "album"
+                $facet: {
+                    metadata: [{ $count: 'totalSongs' }],
+                    data: [
+                        {
+                            $lookup: {
+                                from: "albums",
+                                localField: "albumId",
+                                foreignField: "_id",
+                                as: "album"
+                            }
+                        },
+                        {
+                            $lookup: {
+                                from: "genres",
+                                localField: "genreId",
+                                foreignField: "_id",
+                                as: "genre"
+                            }
+                        },
+                        {
+                            $lookup: {
+                                from: "artists",
+                                localField: "artistId",
+                                foreignField: "_id",
+                                as: "artist"
+                            }
+                        },
+                        {
+                            $unwind: { path: '$artist' }
+                        },
+                        {
+                            $unwind: { path: '$album' }
+                        },
+                        {
+                            $unwind: { path: '$genre' }
+                        },
+                        {
+                            $project: { albumId: 0, artistId: 0, genreId: 0, __v: 0 }
+                        },
+                        { $skip: (page - 1) * limit },
+                        { $limit: limit }
+                    ]
                 }
             },
-            {
-                $lookup: {
-                    from: "genres",
-                    localField: "genreId",
-                    foreignField: "_id",
-                    as: "genre"
-                }
-            },
-            {
-                $lookup: {
-                    from: "artists",
-                    localField: "artistId",
-                    foreignField: "_id",
-                    as: "artist"
-                }
-            },
-            {
-                $unwind: { path: '$artist' }
-            },
-            {
-                $unwind: { path: '$album' }
-            },
-            {
-                $unwind: { path: '$genre' }
-            },
-            {
-                $project: { albumId: 0, artistId: 0, genreId: 0 }
-            }
         ]);
-        if (songs) {
-            res.status(200).send(songs);
-        }
-        else {
-            res.status(404).json({ message: "No songs found" });
-        }
+        res.status(200).json({
+            songs: {
+                meta: { 'total songs': songs[0].metadata[0].totalSongs, page, limit },
+                data: songs[0].data
+            }
+        });
     }
     catch (error) {
         next(error);
     }
 });
 exports.searchSongs = asyncHandler(async (req, res, next) => {
-    const { key, title, album, artist, genres } = req.query;
+    const { key, title, album, artist, genres, pageSize, pageLimit } = req.query;
     let genreList = [];
     if (genres !== undefined) {
-        const strGenres = JSON.stringify(genres);
-        genreList = [...JSON.parse(strGenres)];
+        let strGenres = JSON.stringify(genres);
+        strGenres = strGenres.replace(/\[|\]/g, "");
+        genreList = [...strGenres.slice(1, -1).split(",")];
     }
     try {
+        const page = parseInt(`${pageSize}`, 10) || 1;
+        const limit = parseInt(`${pageLimit}`, 10) || 10;
         const songs = await song_model_1.default.aggregate([
             {
-                $lookup: {
-                    from: "albums",
-                    localField: "albumId",
-                    foreignField: "_id",
-                    as: "album"
+                $facet: {
+                    data: [
+                        {
+                            $lookup: {
+                                from: "albums",
+                                localField: "albumId",
+                                foreignField: "_id",
+                                as: "album"
+                            }
+                        },
+                        {
+                            $lookup: {
+                                from: "genres",
+                                localField: "genreId",
+                                foreignField: "_id",
+                                as: "genre"
+                            }
+                        },
+                        {
+                            $lookup: {
+                                from: "artists",
+                                localField: "artistId",
+                                foreignField: "_id",
+                                as: "artist"
+                            }
+                        },
+                        {
+                            $unwind: { path: '$artist' }
+                        },
+                        {
+                            $unwind: { path: '$album' }
+                        },
+                        {
+                            $unwind: { path: '$genre' }
+                        },
+                        {
+                            $addFields: {
+                                "artist.name": { $concat: ["$artist.fname", " ", "$artist.lname"] }
+                            }
+                        },
+                        {
+                            $match: {
+                                ...(key && {
+                                    $or: [
+                                        { title: key },
+                                        { 'artist.fname': key },
+                                        { 'artist.fname': key },
+                                        { 'artist.name': key },
+                                        { 'genre.name': key },
+                                        { 'album.name': key },
+                                    ],
+                                })
+                            }
+                        },
+                        {
+                            $match: {
+                                ...(title && { title: title })
+                            }
+                        },
+                        {
+                            $match: {
+                                ...(album && { 'album.name': album })
+                            }
+                        },
+                        {
+                            $match: {
+                                ...(artist && { 'artist.name': artist })
+                            }
+                        },
+                        {
+                            $match: {
+                                ...(genreList.length > 0 && { 'genre.name': { $in: genreList } })
+                            }
+                        },
+                        {
+                            $project: { albumId: 0, artistId: 0, genreId: 0, 'artist.name': 0, __v: 0 }
+                        },
+                        { $skip: (page - 1) * limit },
+                        { $limit: limit }
+                    ],
+                    metadata: [{ $count: 'totalSongs' }]
                 }
-            },
-            {
-                $lookup: {
-                    from: "genres",
-                    localField: "genreId",
-                    foreignField: "_id",
-                    as: "genre"
-                }
-            },
-            {
-                $lookup: {
-                    from: "artists",
-                    localField: "artistId",
-                    foreignField: "_id",
-                    as: "artist"
-                }
-            },
-            {
-                $unwind: { path: '$artist' }
-            },
-            {
-                $unwind: { path: '$album' }
-            },
-            {
-                $unwind: { path: '$genre' }
-            },
-            {
-                $addFields: {
-                    "artist.name": { $concat: ["$artist.fname", " ", "$artist.lname"] }
-                }
-            },
-            {
-                $match: {
-                    ...(key && {
-                        $or: [
-                            { title: key },
-                            { 'artist.fname': key },
-                            { 'artist.fname': key },
-                            { 'artist.name': key },
-                            { 'genre.name': key },
-                            { 'album.name': key },
-                        ]
-                    })
-                }
-            },
-            {
-                $match: {
-                    ...(title && { title: title })
-                }
-            },
-            {
-                $match: {
-                    ...(album && { 'album.name': album })
-                }
-            },
-            {
-                $match: {
-                    ...(artist && { 'artist.name': artist })
-                }
-            },
-            {
-                $match: {
-                    ...(genreList.length > 0 && { 'genre.name': { $in: genreList } })
-                }
-            },
-            {
-                $project: { albumId: 0, artistId: 0, genreId: 0, 'artist.name': 0 }
             }
         ]);
-        res.status(200).send(songs);
+        res.status(200).json({
+            songs: {
+                metadata: { "total songs": songs[0].metadata[0].totalSongs, page, limit },
+                data: songs[0].data
+            }
+        });
     }
     catch (error) {
         next(error);

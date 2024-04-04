@@ -240,7 +240,7 @@ export const getArtists = asyncHandler(
     try {
       const page = parseInt(`${pageSize}`,10)||1;
       const limit = parseInt(`${pageLimit}`,10)||6;
-      
+
       const artists = await Artist.aggregate([
         {
           $facet:{
@@ -268,13 +268,28 @@ export const getArtists = asyncHandler(
  */
 export const getAlbums = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    const {pageSize, pageLimit} = req.query;
     try {
-      const albums = await Album.find();
-      if (albums) {
-        res.status(200).send(albums);
-      } else {
-        res.status(404).json({ message: "No Album found" })
-      }
+      const page = parseInt(`${pageSize}`,10)||1;
+      const limit = parseInt(`${pageLimit}`,10)||6;
+      
+      const albums = await Album.aggregate([
+        {
+          $facet:{
+            metadata:[{$count:'totalAlbums'}],
+            data:[
+              {$skip:(page-1)*limit},
+              {$limit:limit}
+            ]
+          }
+        }
+      ]);
+      res.status(200).json({
+        artists:{
+          meta:{'total albums':albums[0].metadata[0].totalAlbums, page, limit},
+          data:albums[0].data
+        }
+      })
     } catch (error) {
       next(error)
     }
@@ -285,13 +300,28 @@ export const getAlbums = asyncHandler(
  */
 export const getGenres = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    const {pageSize, pageLimit} = req.query;
     try {
-      const genres = await Genre.find();
-      if (genres) {
-        res.status(200).send(genres);
-      } else {
-        res.status(404).json({ message: "No genres found" })
-      }
+      const page = parseInt(`${pageSize}`,10)||1;
+      const limit = parseInt(`${pageLimit}`,10)||6;
+      
+      const genres = await Genre.aggregate([
+        {
+          $facet:{
+            metadata:[{$count:'totalGenres'}],
+            data:[
+              {$skip:(page-1)*limit},
+              {$limit:limit}
+            ]
+          }
+        }
+      ]);
+      res.status(200).json({
+        artists:{
+          meta:{'total genres':genres[0].metadata[0].totalGenres, page, limit},
+          data:genres[0].data
+        }
+      })
     } catch (error) {
       next(error)
     }

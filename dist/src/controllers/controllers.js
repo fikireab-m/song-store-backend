@@ -214,14 +214,27 @@ exports.searchSongs = asyncHandler(async (req, res, next) => {
     }
 });
 exports.getArtists = asyncHandler(async (req, res, next) => {
+    const { pageSize, pageLimit } = req.query;
     try {
-        const artists = await artist_model_1.default.find();
-        if (artists) {
-            res.status(200).send(artists);
-        }
-        else {
-            res.status(404).json({ message: "No artist found" });
-        }
+        const page = parseInt(`${pageSize}`, 10) || 1;
+        const limit = parseInt(`${pageLimit}`, 10) || 6;
+        const artists = await artist_model_1.default.aggregate([
+            {
+                $facet: {
+                    metadata: [{ $count: 'totalArtists' }],
+                    data: [
+                        { $skip: (page - 1) * limit },
+                        { $limit: limit }
+                    ]
+                }
+            }
+        ]);
+        res.status(200).json({
+            artists: {
+                meta: { 'total artists': artists[0].metadata[0].totalArtists, page, limit },
+                data: artists[0].data
+            }
+        });
     }
     catch (error) {
         next(error);

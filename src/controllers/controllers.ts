@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 const asyncHandler = require("express-async-handler");
 import Song, { SongInterface } from "../model/song_model";
-import mongoose, { ObjectId } from "mongoose";
+import mongoose from "mongoose";
 import Artist from "../model/artist.model";
 import Album from "../model/album_model";
 import Genre from "../model/genre_model";
@@ -236,26 +236,26 @@ export const searchSongs = asyncHandler(
  */
 export const getArtists = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const {pageSize, pageLimit} = req.query;
+    const { pageSize, pageLimit } = req.query;
     try {
-      const page = parseInt(`${pageSize}`,10)||1;
-      const limit = parseInt(`${pageLimit}`,10)||6;
+      const page = parseInt(`${pageSize}`, 10) || 1;
+      const limit = parseInt(`${pageLimit}`, 10) || 6;
 
       const artists = await Artist.aggregate([
         {
-          $facet:{
-            metadata:[{$count:'totalArtists'}],
-            data:[
-              {$skip:(page-1)*limit},
-              {$limit:limit}
+          $facet: {
+            metadata: [{ $count: 'totalArtists' }],
+            data: [
+              { $skip: (page - 1) * limit },
+              { $limit: limit }
             ]
           }
         }
       ]);
       res.status(200).json({
-        artists:{
-          meta:{'total artists':artists[0].metadata[0].totalArtists, page, limit},
-          data:artists[0].data
+        artists: {
+          meta: { 'total artists': artists[0].metadata[0].totalArtists, page, limit },
+          data: artists[0].data
         }
       })
     } catch (error) {
@@ -268,26 +268,26 @@ export const getArtists = asyncHandler(
  */
 export const getAlbums = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const {pageSize, pageLimit} = req.query;
+    const { pageSize, pageLimit } = req.query;
     try {
-      const page = parseInt(`${pageSize}`,10)||1;
-      const limit = parseInt(`${pageLimit}`,10)||6;
-      
+      const page = parseInt(`${pageSize}`, 10) || 1;
+      const limit = parseInt(`${pageLimit}`, 10) || 6;
+
       const albums = await Album.aggregate([
         {
-          $facet:{
-            metadata:[{$count:'totalAlbums'}],
-            data:[
-              {$skip:(page-1)*limit},
-              {$limit:limit}
+          $facet: {
+            metadata: [{ $count: 'totalAlbums' }],
+            data: [
+              { $skip: (page - 1) * limit },
+              { $limit: limit }
             ]
           }
         }
       ]);
       res.status(200).json({
-        artists:{
-          meta:{'total albums':albums[0].metadata[0].totalAlbums, page, limit},
-          data:albums[0].data
+        artists: {
+          meta: { 'total albums': albums[0].metadata[0].totalAlbums, page, limit },
+          data: albums[0].data
         }
       })
     } catch (error) {
@@ -300,26 +300,26 @@ export const getAlbums = asyncHandler(
  */
 export const getGenres = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const {pageSize, pageLimit} = req.query;
+    const { pageSize, pageLimit } = req.query;
     try {
-      const page = parseInt(`${pageSize}`,10)||1;
-      const limit = parseInt(`${pageLimit}`,10)||6;
-      
+      const page = parseInt(`${pageSize}`, 10) || 1;
+      const limit = parseInt(`${pageLimit}`, 10) || 6;
+
       const genres = await Genre.aggregate([
         {
-          $facet:{
-            metadata:[{$count:'totalGenres'}],
-            data:[
-              {$skip:(page-1)*limit},
-              {$limit:limit}
+          $facet: {
+            metadata: [{ $count: 'totalGenres' }],
+            data: [
+              { $skip: (page - 1) * limit },
+              { $limit: limit }
             ]
           }
         }
       ]);
       res.status(200).json({
-        artists:{
-          meta:{'total genres':genres[0].metadata[0].totalGenres, page, limit},
-          data:genres[0].data
+        artists: {
+          meta: { 'total genres': genres[0].metadata[0].totalGenres, page, limit },
+          data: genres[0].data
         }
       })
     } catch (error) {
